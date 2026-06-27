@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<!-- saved from url=(0191)file:///C:/Users/josse/AppData/Local/Packages/5319275A.WhatsAppDesktop_cv1g1gvanyjgm/LocalState/sessions/A55085960D929E4425D6EB61FB42961EBEE95A50/transfers/2026-24/postgresql-funciones-2.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PostgreSQL – Guía de Funciones</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2230;
+    --border: #2a3347;
+    --accent: #4ade80;
+    --accent2: #38bdf8;
+    --accent3: #f472b6;
+    --accent4: #fb923c;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --tag-bg: #1e3a2f;
+    --tag-text: #4ade80;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header .badge {
+    display: inline-block;
+    background: var(--tag-bg);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  header h1 {
+    font-size: clamp(22px, 5vw, 38px);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  header h1 span { color: var(--accent); }
+
+  header p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 8px;
+  }
+
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active { background: var(--accent); color: #0d1117; border-color: var(--accent); font-weight: 600; }
+
+  .section {
+    max-width: 860px;
+    margin: 0 auto 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .section-header:hover { background: var(--surface2); }
+
+  .fn-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .fn-category {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .cat-fecha { background: #1e2f3a; color: var(--accent2); }
+  .cat-texto { background: #2d1e3a; color: var(--accent3); }
+  .cat-conversion { background: #3a2a1e; color: var(--accent4); }
+  .cat-agregacion { background: #1e3a2f; color: var(--accent); }
+  .cat-logica { background: #3a1e2a; color: #fb7185; }
+  .cat-matematica { background: #2a1e3a; color: #c084fc; }
+  .cat-joins { background: #1e2a3a; color: #38bdf8; }
+
+  .section-desc {
+    color: var(--muted);
+    font-size: 13px;
+    flex: 1;
+  }
+
+  .toggle-icon {
+    color: var(--muted);
+    font-size: 18px;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .section-body {
+    padding: 24px;
+    display: none;
+  }
+
+  .section-body.open { display: block; }
+
+  .definition {
+    font-size: 13.5px;
+    color: #b1bac4;
+    line-height: 1.7;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 6px 6px 0;
+  }
+
+  .example-block {
+    margin-bottom: 20px;
+  }
+
+  .example-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .example-title {
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .code-block {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+    position: relative;
+  }
+
+  .kw { color: #ff7b72; }
+  .fn { color: #d2a8ff; }
+  .str { color: #a5d6ff; }
+  .num { color: #79c0ff; }
+  .cmt { color: #8b949e; font-style: italic; }
+  .col { color: #ffa657; }
+  .op { color: #ff7b72; }
+
+  .result-block {
+    background: #0a1628;
+    border: 1px solid #1d3557;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    margin-top: 8px;
+  }
+
+  .result-label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .result-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .result-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .result-col .header { color: var(--muted); font-size: 11px; }
+  .result-col .value { color: var(--accent); }
+
+  table.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+
+  table.result-table th {
+    background: #0f2044;
+    color: var(--accent2);
+    font-size: 11px;
+    text-align: left;
+    padding: 6px 12px;
+    letter-spacing: 0.5px;
+  }
+
+  table.result-table td {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid #1a2540;
+    color: var(--accent);
+  }
+
+  table.result-table tr:last-child td { border-bottom: none; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  .tip {
+    background: #1c2d1c;
+    border: 1px solid #2d4a2d;
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: #86c887;
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .tip::before { content: '💡'; flex-shrink: 0; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">PostgreSQL · Referencia</div>
+  <h1>Funciones <span>SQL</span> Esenciales</h1>
+  <p>Guía práctica con ejemplos listos para usar · Hacé clic en cada función para expandirla</p>
+</header>
+
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filter(&#39;all&#39;, this)">Todas</button>
+  <button class="filter-btn" onclick="filter(&#39;fecha&#39;, this)">📅 Fecha</button>
+  <button class="filter-btn" onclick="filter(&#39;texto&#39;, this)">🔤 Texto</button>
+  <button class="filter-btn" onclick="filter(&#39;conversion&#39;, this)">🔄 Conversión</button>
+  <button class="filter-btn" onclick="filter(&#39;agregacion&#39;, this)">📊 Agregación</button>
+  <button class="filter-btn" onclick="filter(&#39;logica&#39;, this)">🔀 Lógica</button>
+  <button class="filter-btn" onclick="filter(&#39;avanzado&#39;, this)">🧩 Avanzado</button>
+  <button class="filter-btn" onclick="filter(&#39;matematica&#39;, this)">🔢 Matemática</button>
+  <button class="filter-btn" onclick="filter(&#39;joins&#39;, this)">🔗 JOINs</button>
+</div>
+
+<!-- ==================== TO_DATE ==================== -->
+<div class="section" data-cat="fecha">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">TO_DATE()</div>
+      <div class="section-desc">Convierte un texto en un valor de tipo DATE</div>
+    </div>
+    <span class="fn-category cat-fecha">Fecha</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Sintaxis:</strong> <code>TO_DATE(texto, formato)</code><br><br>
+      Toma un <em>string</em> que representa una fecha y lo convierte en un valor DATE real que PostgreSQL puede entender y operar. El formato le dice a PG cómo leer el texto: <code>DD</code> = día, <code>MM</code> = mes, <code>YYYY</code> = año de 4 dígitos.
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Conversión básica de texto a fecha</div>
+      <div class="code-block">
+<span class="kw">SELECT</span> <span class="fn">TO_DATE</span>(<span class="str">'13/06/2026'</span>, <span class="str">'DD/MM/YYYY'</span>) <span class="kw">AS</span> <span class="col">fecha_resultado</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>fecha_resultado</th></tr>
+          <tr><td>2026-06-13</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Formato con nombre de mes en inglés</div>
+      <div class="code-block">
+<span class="kw">SELECT</span> <span class="fn">TO_DATE</span>(<span class="str">'June 13, 2026'</span>, <span class="str">'Month DD, YYYY'</span>) <span class="kw">AS</span> <span class="col">fecha</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table"><tbody><tr><th>fecha</th></tr><tr><td>2026-06-13</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">Caso de uso real: datos vienen como texto de un formulario</div>
+      <div class="code-block">
+<span class="kw">UPDATE</span> clientes
+<span class="kw">SET</span> fecha_nacimiento = <span class="fn">TO_DATE</span>(fecha_texto, <span class="str">'DD-MM-YYYY'</span>)
+<span class="kw">WHERE</span> fecha_nacimiento <span class="kw">IS NULL</span>;
+      </div>
+    </div>
+    <div class="tip">Si el texto y el formato no coinciden, PG lanza un error. Asegurate de que ambos tengan la misma estructura.</div>
+  </div>
+</div>
+
+<!-- ==================== AGE ==================== -->
+<div class="section" data-cat="fecha">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">AGE()</div>
+      <div class="section-desc">Calcula la diferencia entre dos fechas en años, meses y días</div>
+    </div>
+    <span class="fn-category cat-fecha">Fecha</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Sintaxis:</strong> <code>AGE(fecha_fin, fecha_inicio)</code> o <code>AGE(fecha)</code><br><br>
+      Devuelve un <em>interval</em> que representa la diferencia entre las dos fechas. Si solo pasás una fecha, la compara con la fecha actual (<code>CURRENT_DATE</code>). Perfecto para calcular edades reales.
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Calcular edad de una persona</div>
+      <div class="code-block">
+<span class="kw">SELECT</span> <span class="fn">AGE</span>(<span class="str">'2001-03-15'</span>::<span class="col">DATE</span>) <span class="kw">AS</span> <span class="col">edad</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table"><tbody><tr><th>edad</th></tr><tr><td>25 years 2 mons 29 days</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Diferencia entre dos fechas específicas</div>
+      <div class="code-block">
+<span class="kw">SELECT</span> <span class="fn">AGE</span>(<span class="str">'2026-12-31'</span>, <span class="str">'2026-01-01'</span>) <span class="kw">AS</span> <span class="col">diferencia</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table"><tbody><tr><th>diferencia</th></tr><tr><td>11 mons 30 days</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">En una tabla real: edad de cada empleado</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  nombre,
+  fecha_nacimiento,
+  <span class="fn">AGE</span>(fecha_nacimiento) <span class="kw">AS</span> <span class="col">edad_actual</span>
+<span class="kw">FROM</span> empleados;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>nombre</th><th>fecha_nacimiento</th><th>edad_actual</th></tr>
+          <tr><td>Ana López</td><td>1990-05-20</td><td>35 years 0 mons 24 days</td></tr>
+          <tr><td>Carlos Mora</td><td>1985-11-03</td><td>40 years 7 mons 10 days</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="tip">Para extraer solo el número de años de AGE(), combinalo con EXTRACT: <code>EXTRACT(YEAR FROM AGE(fecha_nacimiento))</code></div>
+  </div>
+</div>
+
+<!-- ==================== EXTRACT ==================== -->
+<div class="section" data-cat="fecha">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">EXTRACT()</div>
+      <div class="section-desc">Extrae una parte específica de una fecha o intervalo</div>
+    </div>
+    <span class="fn-category cat-fecha">Fecha</span>
+    <span class="toggle-icon" style="transform: rotate(0deg);">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Sintaxis:</strong> <code>EXTRACT(campo FROM fecha)</code><br><br>
+      Campos disponibles: <code>YEAR</code>, <code>MONTH</code>, <code>DAY</code>, <code>HOUR</code>, <code>MINUTE</code>, <code>SECOND</code>, <code>DOW</code> (día de semana 0=domingo), <code>DOY</code> (día del año), <code>WEEK</code>, <code>QUARTER</code>. Devuelve un número.
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Extraer partes básicas</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">EXTRACT</span>(<span class="kw">YEAR</span>  <span class="kw">FROM</span> <span class="fn">CURRENT_DATE</span>) <span class="kw">AS</span> <span class="col">anio</span>,
+  <span class="fn">EXTRACT</span>(<span class="kw">MONTH</span> <span class="kw">FROM</span> <span class="fn">CURRENT_DATE</span>) <span class="kw">AS</span> <span class="col">mes</span>,
+  <span class="fn">EXTRACT</span>(<span class="kw">DAY</span>   <span class="kw">FROM</span> <span class="fn">CURRENT_DATE</span>) <span class="kw">AS</span> <span class="col">dia</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>anio</th><th>mes</th><th>dia</th></tr>
+          <tr><td>2026</td><td>6</td><td>13</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Ventas por mes del año</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">EXTRACT</span>(<span class="kw">MONTH</span> <span class="kw">FROM</span> fecha_venta) <span class="kw">AS</span> <span class="col">mes</span>,
+  <span class="fn">SUM</span>(total) <span class="kw">AS</span> <span class="col">ventas_mes</span>
+<span class="kw">FROM</span> ventas
+<span class="kw">GROUP BY</span> mes
+<span class="kw">ORDER BY</span> mes;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>mes</th><th>ventas_mes</th></tr>
+          <tr><td>1</td><td>58000.00</td></tr>
+          <tr><td>2</td><td>43200.00</td></tr>
+          <tr><td>3</td><td>71500.00</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">Edad en años solamente (combinando con AGE)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  nombre,
+  <span class="fn">EXTRACT</span>(<span class="kw">YEAR</span> <span class="kw">FROM</span> <span class="fn">AGE</span>(fecha_nacimiento)) <span class="kw">AS</span> <span class="col">edad_anos</span>
+<span class="kw">FROM</span> empleados;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>nombre</th><th>edad_anos</th></tr>
+          <tr><td>Ana López</td><td>35</td></tr>
+          <tr><td>Carlos Mora</td><td>40</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="tip">DOW: 0 = domingo, 1 = lunes ... 6 = sábado. Útil para filtrar registros de un día específico de la semana.</div>
+  </div>
+</div>
+
+<!-- ==================== AGREGACIÓN ==================== -->
+<div class="section" data-cat="agregacion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">Funciones de Agregación</div>
+      <div class="section-desc">SUM, AVG, COUNT, MAX, MIN — resumen grupos de filas</div>
+    </div>
+    <span class="fn-category cat-agregacion">Agregación</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      Las funciones de agregación toman un <em>conjunto de filas</em> y devuelven un único valor. Siempre van acompañadas de <code>GROUP BY</code> cuando querés agrupar, o solas si querés el total de toda la tabla.
+      <br><br>
+      <code>COUNT(col)</code> – cuenta filas no nulas · <code>SUM(col)</code> – suma · <code>AVG(col)</code> – promedio · <code>MAX(col)</code> – mayor valor · <code>MIN(col)</code> – menor valor
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Totales simples de toda la tabla</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">COUNT</span>(*) <span class="kw">AS</span> <span class="col">total_empleados</span>,
+  <span class="fn">AVG</span>(salario) <span class="kw">AS</span> <span class="col">salario_promedio</span>,
+  <span class="fn">MAX</span>(salario) <span class="kw">AS</span> <span class="col">salario_maximo</span>,
+  <span class="fn">MIN</span>(salario) <span class="kw">AS</span> <span class="col">salario_minimo</span>,
+  <span class="fn">SUM</span>(salario) <span class="kw">AS</span> <span class="col">planilla_total</span>
+<span class="kw">FROM</span> empleados;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>total</th><th>promedio</th><th>maximo</th><th>minimo</th><th>planilla</th></tr>
+          <tr><td>48</td><td>750000.00</td><td>2400000.00</td><td>420000.00</td><td>36000000.00</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Agregación con GROUP BY — salario promedio por departamento</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  departamento,
+  <span class="fn">COUNT</span>(*) <span class="kw">AS</span> <span class="col">cantidad</span>,
+  <span class="fn">ROUND</span>(<span class="fn">AVG</span>(salario), <span class="num">2</span>) <span class="kw">AS</span> <span class="col">promedio</span>
+<span class="kw">FROM</span> empleados
+<span class="kw">GROUP BY</span> departamento
+<span class="kw">ORDER BY</span> promedio <span class="kw">DESC</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>departamento</th><th>cantidad</th><th>promedio</th></tr>
+          <tr><td>IT</td><td>12</td><td>1200000.00</td></tr>
+          <tr><td>Ventas</td><td>20</td><td>850000.00</td></tr>
+          <tr><td>RRHH</td><td>8</td><td>680000.00</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">HAVING — filtrar grupos (equivalente de WHERE para agregaciones)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  departamento,
+  <span class="fn">COUNT</span>(*) <span class="kw">AS</span> <span class="col">cant</span>,
+  <span class="fn">SUM</span>(salario) <span class="kw">AS</span> <span class="col">total_salarios</span>
+<span class="kw">FROM</span> empleados
+<span class="kw">GROUP BY</span> departamento
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) &gt; <span class="num">5</span> <span class="cmt">-- solo depto con más de 5 empleados</span>
+<span class="kw">ORDER BY</span> total_salarios <span class="kw">DESC</span>;
+      </div>
+    </div>
+    <div class="tip">Regla de oro: si está en SELECT y NO es una función de agregación, tiene que estar en GROUP BY.</div>
+  </div>
+</div>
+
+<!-- ==================== TO_CHAR ==================== -->
+<div class="section" data-cat="conversion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">TO_CHAR()</div>
+      <div class="section-desc">Convierte fechas y números a texto con formato personalizado</div>
+    </div>
+    <span class="fn-category cat-conversion">Conversión</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Sintaxis:</strong> <code>TO_CHAR(valor, formato)</code><br><br>
+      Es el inverso de TO_DATE. Toma una fecha o número y lo convierte en texto con el formato que vos especificás. Muy útil para reportes y visualización.
+      <br><br>Formatos de fecha: <code>YYYY</code>, <code>MM</code>, <code>DD</code>, <code>HH24</code>, <code>MI</code>, <code>SS</code>, <code>Month</code>, <code>Day</code>. Formatos de número: <code>999</code>, <code>FM</code>, <code>G</code> (separador miles), <code>D</code> (decimal), <code>L</code> (símbolo moneda local).
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Formatear una fecha para mostrarla al usuario</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">TO_CHAR</span>(<span class="fn">CURRENT_DATE</span>, <span class="str">'DD "de" Month "de" YYYY'</span>) <span class="kw">AS</span> <span class="col">fecha_legible</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table"><tbody><tr><th>fecha_legible</th></tr><tr><td>13 de June      de 2026</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Formatear números — salario con símbolo y separadores</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  nombre,
+  <span class="fn">TO_CHAR</span>(salario, <span class="str">'L999G999G999D00'</span>) <span class="kw">AS</span> <span class="col">salario_formateado</span>
+<span class="kw">FROM</span> empleados;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>nombre</th><th>salario_formateado</th></tr>
+          <tr><td>Ana López</td><td>₡     750,000.00</td></tr>
+          <tr><td>Carlos Mora</td><td>₡   1,200,000.00</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">Generar un periodo tipo "2026-06" para agrupar por mes</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">TO_CHAR</span>(fecha_venta, <span class="str">'YYYY-MM'</span>) <span class="kw">AS</span> <span class="col">periodo</span>,
+  <span class="fn">SUM</span>(total) <span class="kw">AS</span> <span class="col">ventas</span>
+<span class="kw">FROM</span> ventas
+<span class="kw">GROUP BY</span> periodo
+<span class="kw">ORDER BY</span> periodo;
+      </div>
+    </div>
+    <div class="tip">Los textos dentro del formato van entre comillas dobles: <code>'DD "de" Month'</code>. FMMonth quita los espacios extra del nombre del mes.</div>
+  </div>
+</div>
+
+<!-- ==================== CAST ==================== -->
+<div class="section" data-cat="conversion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">CAST() y ::</div>
+      <div class="section-desc">Convierte un valor de un tipo de dato a otro</div>
+    </div>
+    <span class="fn-category cat-conversion">Conversión</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Sintaxis larga:</strong> <code>CAST(valor AS tipo)</code><br>
+      <strong>Sintaxis corta:</strong> <code>valor::tipo</code><br><br>
+      Ambas hacen lo mismo: convertir un valor a otro tipo. La versión <code>::</code> es exclusiva de PostgreSQL y es la más usada por ser más corta. Tipos comunes: <code>INTEGER</code>, <code>NUMERIC</code>, <code>TEXT</code>, <code>DATE</code>, <code>TIMESTAMP</code>, <code>BOOLEAN</code>, <code>VARCHAR(n)</code>.
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Texto a número para operar</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="str">'150'</span>::<span class="col">INTEGER</span> + <span class="num">50</span> <span class="kw">AS</span> <span class="col">resultado</span>,
+  <span class="fn">CAST</span>(<span class="str">'3.14'</span> <span class="kw">AS</span> <span class="col">NUMERIC</span>) * <span class="num">2</span> <span class="kw">AS</span> <span class="col">pi_doble</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>resultado</th><th>pi_doble</th></tr>
+          <tr><td>200</td><td>6.28</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Número a texto para concatenar</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="str">'Empleado #'</span> || id::TEXT <span class="kw">AS</span> <span class="col">etiqueta</span>,
+  nombre || <span class="str">' tiene '</span> || edad::TEXT || <span class="str">' años'</span> <span class="kw">AS</span> <span class="col">descripcion</span>
+<span class="kw">FROM</span> empleados;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>etiqueta</th><th>descripcion</th></tr>
+          <tr><td>Empleado #1</td><td>Ana López tiene 35 años</td></tr>
+          <tr><td>Empleado #2</td><td>Carlos Mora tiene 40 años</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">Texto a fecha (equivalente a TO_DATE simple)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span> <span class="str">'2026-06-13'</span>::<span class="col">DATE</span> <span class="kw">AS</span> <span class="col">fecha</span>,
+       <span class="str">'2026-06-13 14:30:00'</span>::<span class="col">TIMESTAMP</span> <span class="kw">AS</span> <span class="col">timestamp_val</span>;
+      </div>
+    </div>
+    <div class="tip"><code>::</code> es syntactic sugar de PG — más corto y más legible. Para código portable entre motores SQL, usá CAST().</div>
+  </div>
+</div>
+
+<!-- ==================== CONCAT Y || ==================== -->
+<div class="section" data-cat="texto">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">CONCAT() y ||</div>
+      <div class="section-desc">Une textos en un solo string</div>
+    </div>
+    <span class="fn-category cat-texto">Texto</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Diferencia clave:</strong><br>
+      <code>||</code> — Si algún valor es NULL, el resultado completo es NULL.<br>
+      <code>CONCAT()</code> — Ignora los NULL, los trata como string vacío.<br><br>
+      Podés usar ambos según si querés que el NULL "infecte" el resultado o no.
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Concatenar nombre completo</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  nombre || <span class="str">' '</span> || apellido <span class="kw">AS</span> <span class="col">nombre_pipe</span>,
+  <span class="fn">CONCAT</span>(nombre, <span class="str">' '</span>, apellido) <span class="kw">AS</span> <span class="col">nombre_concat</span>
+<span class="kw">FROM</span> empleados;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>nombre_pipe</th><th>nombre_concat</th></tr>
+          <tr><td>Ana López</td><td>Ana López</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Diferencia con NULL (importante)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="str">'Hola '</span> || <span class="kw">NULL</span> || <span class="str">' mundo'</span>    <span class="kw">AS</span> <span class="col">con_pipe</span>,    <span class="cmt">-- → NULL</span>
+  <span class="fn">CONCAT</span>(<span class="str">'Hola '</span>, <span class="kw">NULL</span>, <span class="str">' mundo'</span>) <span class="kw">AS</span> <span class="col">con_concat</span>; <span class="cmt">-- → 'Hola  mundo'</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>con_pipe</th><th>con_concat</th></tr>
+          <tr><td>NULL</td><td>Hola  mundo</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">CONCAT_WS — concatenar con separador (muy útil)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">CONCAT_WS</span>(<span class="str">', '</span>, nombre, apellido, ciudad) <span class="kw">AS</span> <span class="col">datos</span>
+<span class="kw">FROM</span> clientes;
+<span class="cmt">-- CONCAT_WS ignora NULLs Y agrega el separador automáticamente</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>datos</th></tr>
+          <tr><td>Ana, López, San José</td></tr>
+          <tr><td>Carlos, Mora, Limón</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="tip">CONCAT_WS (With Separator) es frecuentemente la mejor opción — pone el separador solo entre los valores no-nulos.</div>
+  </div>
+</div>
+
+<!-- ==================== SUBSTRING ==================== -->
+<div class="section" data-cat="texto">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">SUBSTRING()</div>
+      <div class="section-desc">Extrae una porción de un texto</div>
+    </div>
+    <span class="fn-category cat-texto">Texto</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Sintaxis:</strong> <code>SUBSTRING(texto FROM inicio FOR longitud)</code> o <code>SUBSTRING(texto, inicio, longitud)</code><br><br>
+      Extrae una subcadena empezando en la posición <code>inicio</code> (los índices empiezan en 1, no en 0) y tomando <code>longitud</code> caracteres. Si omitís <code>longitud</code>, toma hasta el final.
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Extraer las primeras letras</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">SUBSTRING</span>(<span class="str">'Informática Empresarial'</span>, <span class="num">1</span>, <span class="num">11</span>) <span class="kw">AS</span> <span class="col">primera_palabra</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table"><tbody><tr><th>primera_palabra</th></tr><tr><td>Informática</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Extraer el año de un código formateado</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  codigo,
+  <span class="fn">SUBSTRING</span>(codigo, <span class="num">1</span>, <span class="num">4</span>) <span class="kw">AS</span> <span class="col">anio</span>,
+  <span class="fn">SUBSTRING</span>(codigo, <span class="num">6</span>) <span class="kw">AS</span> <span class="col">numero</span>
+<span class="kw">FROM</span> facturas;
+<span class="cmt">-- Ejemplo de código: '2026-00842'</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>codigo</th><th>anio</th><th>numero</th></tr>
+          <tr><td>2026-00842</td><td>2026</td><td>00842</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">Usar con POSITION para encontrar dónde cortar</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  email,
+  <span class="fn">SUBSTRING</span>(email, <span class="num">1</span>, <span class="fn">POSITION</span>(<span class="str">'@'</span> <span class="kw">IN</span> email) - <span class="num">1</span>) <span class="kw">AS</span> <span class="col">usuario</span>
+<span class="kw">FROM</span> usuarios;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>email</th><th>usuario</th></tr>
+          <tr><td>josse@ucr.ac.cr</td><td>josse</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="tip">En PG también existe <code>LEFT(texto, n)</code> y <code>RIGHT(texto, n)</code> para extraer desde los extremos de forma más legible.</div>
+  </div>
+</div>
+
+<!-- ==================== LENGTH ==================== -->
+<div class="section" data-cat="texto">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">LENGTH()</div>
+      <div class="section-desc">Devuelve la longitud (cantidad de caracteres) de un texto</div>
+    </div>
+    <span class="fn-category cat-texto">Texto</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Sintaxis:</strong> <code>LENGTH(texto)</code> o <code>CHAR_LENGTH(texto)</code><br><br>
+      Devuelve el número de caracteres del string. NULL si el valor es NULL. Cuenta caracteres Unicode, no bytes (importante para textos con acentos o ñ).
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Longitud básica</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">LENGTH</span>(<span class="str">'Hola mundo'</span>) <span class="kw">AS</span> <span class="col">lon_hola</span>,
+  <span class="fn">LENGTH</span>(<span class="str">'Limón'</span>) <span class="kw">AS</span> <span class="col">lon_limon</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>lon_hola</th><th>lon_limon</th></tr>
+          <tr><td>10</td><td>5</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Validar que contraseñas tengan mínimo 8 caracteres</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  usuario,
+  <span class="fn">LENGTH</span>(contrasena) <span class="kw">AS</span> <span class="col">longitud</span>,
+  <span class="kw">CASE</span> <span class="kw">WHEN</span> <span class="fn">LENGTH</span>(contrasena) &gt;= <span class="num">8</span> <span class="kw">THEN</span> <span class="str">'OK'</span>
+       <span class="kw">ELSE</span> <span class="str">'Muy corta'</span> <span class="kw">END</span> <span class="kw">AS</span> <span class="col">estado</span>
+<span class="kw">FROM</span> usuarios;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>usuario</th><th>longitud</th><th>estado</th></tr>
+          <tr><td>josse</td><td>12</td><td>OK</td></tr>
+          <tr><td>user2</td><td>4</td><td>Muy corta</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">Filtrar por longitud</div>
+      <div class="code-block">
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> productos
+<span class="kw">WHERE</span> <span class="fn">LENGTH</span>(descripcion) &gt; <span class="num">200</span>; <span class="cmt">-- descripciones largas</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TRIM ==================== -->
+<div class="section" data-cat="texto">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">TRIM()</div>
+      <div class="section-desc">Elimina espacios (u otros caracteres) del inicio, fin o ambos lados</div>
+    </div>
+    <span class="fn-category cat-texto">Texto</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Variantes:</strong><br>
+      <code>TRIM(texto)</code> — elimina espacios de ambos lados<br>
+      <code>LTRIM(texto)</code> — solo del lado izquierdo<br>
+      <code>RTRIM(texto)</code> — solo del lado derecho<br>
+      <code>TRIM(LEADING 'x' FROM texto)</code> — elimina el caracter 'x' del inicio<br>
+      <code>TRIM(BOTH 'x' FROM texto)</code> — elimina 'x' de ambos lados
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Limpiar espacios básico</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">TRIM</span>(<span class="str">'  Hola mundo  '</span>) <span class="kw">AS</span> <span class="col">limpio</span>,
+  <span class="fn">LTRIM</span>(<span class="str">'  Hola mundo  '</span>) <span class="kw">AS</span> <span class="col">solo_izquierda</span>,
+  <span class="fn">RTRIM</span>(<span class="str">'  Hola mundo  '</span>) <span class="kw">AS</span> <span class="col">solo_derecha</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>limpio</th><th>solo_izquierda</th><th>solo_derecha</th></tr>
+          <tr><td>'Hola mundo'</td><td>'Hola mundo  '</td><td>'  Hola mundo'</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Limpiar datos sucios de una importación</div>
+      <div class="code-block">
+<span class="kw">UPDATE</span> clientes
+<span class="kw">SET</span>
+  nombre   = <span class="fn">TRIM</span>(nombre),
+  apellido = <span class="fn">TRIM</span>(apellido),
+  email    = <span class="fn">LOWER</span>(<span class="fn">TRIM</span>(email));
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">Eliminar caracteres específicos (no solo espacios)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">TRIM</span>(<span class="kw">BOTH</span> <span class="str">'$'</span> <span class="kw">FROM</span> <span class="str">'$$1500$$'</span>) <span class="kw">AS</span> <span class="col">precio_limpio</span>;
+<span class="cmt">-- → '1500'</span>
+      </div>
+    </div>
+    <div class="tip">Siempre que recibís datos de formularios o archivos CSV, pasalos por TRIM + LOWER para normalizar antes de comparar.</div>
+  </div>
+</div>
+
+<!-- ==================== NULLIF ==================== -->
+<div class="section" data-cat="logica">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">NULLIF()</div>
+      <div class="section-desc">Devuelve NULL si dos valores son iguales, sino devuelve el primero</div>
+    </div>
+    <span class="fn-category cat-logica">Lógica</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Sintaxis:</strong> <code>NULLIF(valor1, valor2)</code><br><br>
+      Si <code>valor1 = valor2</code> → devuelve NULL.<br>
+      Si <code>valor1 ≠ valor2</code> → devuelve <code>valor1</code>.<br><br>
+      Su uso más común: evitar divisiones por cero, o convertir un valor "vacío" como '' o 0 en NULL real para que otras funciones lo ignoren.
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Evitar división por cero (clásico)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  ventas / <span class="fn">NULLIF</span>(dias_laborales, <span class="num">0</span>) <span class="kw">AS</span> <span class="col">ventas_por_dia</span>
+<span class="kw">FROM</span> reporte;
+<span class="cmt">-- Si dias_laborales = 0 → resultado es NULL, no un error</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>ventas_por_dia</th></tr>
+          <tr><td>2500.00</td></tr>
+          <tr><td>NULL</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Tratar strings vacíos como NULL</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  nombre,
+  <span class="fn">NULLIF</span>(telefono, <span class="str">''</span>) <span class="kw">AS</span> <span class="col">telefono_limpio</span>
+<span class="kw">FROM</span> clientes;
+<span class="cmt">-- '' se convierte en NULL real</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>nombre</th><th>telefono_limpio</th></tr>
+          <tr><td>Ana</td><td>8888-4444</td></tr>
+          <tr><td>Carlos</td><td>NULL</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">Combinado con COALESCE</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">COALESCE</span>(<span class="fn">NULLIF</span>(descuento, <span class="num">0</span>), precio * <span class="num">0.10</span>) <span class="kw">AS</span> <span class="col">descuento_efectivo</span>
+<span class="kw">FROM</span> pedidos;
+<span class="cmt">-- Si descuento = 0 → usa el 10% del precio como fallback</span>
+      </div>
+    </div>
+    <div class="tip">NULLIF + COALESCE es una combinación muy poderosa para manejar valores "vacíos" de distintos tipos.</div>
+  </div>
+</div>
+
+<!-- ==================== CASE ==================== -->
+<div class="section" data-cat="logica">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">CASE</div>
+      <div class="section-desc">Estructura condicional dentro de una consulta SQL</div>
+    </div>
+    <span class="fn-category cat-logica">Lógica</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      Hay dos formas:<br><br>
+      <strong>CASE simple</strong> — compara un valor con varios posibles:<br>
+      <code>CASE columna WHEN val1 THEN res1 WHEN val2 THEN res2 ELSE resN END</code><br><br>
+      <strong>CASE buscado</strong> — evalúa condiciones booleanas independientes:<br>
+      <code>CASE WHEN cond1 THEN res1 WHEN cond2 THEN res2 ELSE resN END</code>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Categorizar salarios en rangos</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  nombre,
+  salario,
+  <span class="kw">CASE</span>
+    <span class="kw">WHEN</span> salario &lt; <span class="num">500000</span>  <span class="kw">THEN</span> <span class="str">'Bajo'</span>
+    <span class="kw">WHEN</span> salario &lt; <span class="num">1000000</span> <span class="kw">THEN</span> <span class="str">'Medio'</span>
+    <span class="kw">WHEN</span> salario &lt; <span class="num">2000000</span> <span class="kw">THEN</span> <span class="str">'Alto'</span>
+    <span class="kw">ELSE</span> <span class="str">'Ejecutivo'</span>
+  <span class="kw">END</span> <span class="kw">AS</span> <span class="col">rango_salarial</span>
+<span class="kw">FROM</span> empleados;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>nombre</th><th>salario</th><th>rango_salarial</th></tr>
+          <tr><td>Ana López</td><td>750000</td><td>Medio</td></tr>
+          <tr><td>Carlos Mora</td><td>1200000</td><td>Alto</td></tr>
+          <tr><td>Luis Pérez</td><td>2800000</td><td>Ejecutivo</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">CASE simple — traducir un código</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  pedido_id,
+  <span class="kw">CASE</span> estado
+    <span class="kw">WHEN</span> <span class="str">'P'</span> <span class="kw">THEN</span> <span class="str">'Pendiente'</span>
+    <span class="kw">WHEN</span> <span class="str">'E'</span> <span class="kw">THEN</span> <span class="str">'En camino'</span>
+    <span class="kw">WHEN</span> <span class="str">'C'</span> <span class="kw">THEN</span> <span class="str">'Completado'</span>
+    <span class="kw">ELSE</span> <span class="str">'Desconocido'</span>
+  <span class="kw">END</span> <span class="kw">AS</span> <span class="col">estado_legible</span>
+<span class="kw">FROM</span> pedidos;
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">CASE dentro de COUNT — contar condicionalmente</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  departamento,
+  <span class="fn">COUNT</span>(*) <span class="kw">AS</span> <span class="col">total</span>,
+  <span class="fn">COUNT</span>(<span class="kw">CASE</span> <span class="kw">WHEN</span> salario &gt; <span class="num">1000000</span> <span class="kw">THEN</span> <span class="num">1</span> <span class="kw">END</span>) <span class="kw">AS</span> <span class="col">senior</span>
+<span class="kw">FROM</span> empleados
+<span class="kw">GROUP BY</span> departamento;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>departamento</th><th>total</th><th>senior</th></tr>
+          <tr><td>IT</td><td>12</td><td>8</td></tr>
+          <tr><td>Ventas</td><td>20</td><td>5</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="tip">CASE siempre termina con END. ELSE es opcional; si no ponés ELSE y ninguna condición aplica, devuelve NULL.</div>
+  </div>
+</div>
+
+<!-- ==================== SUBCONSULTAS ==================== -->
+<div class="section" data-cat="avanzado">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">Subconsultas (Subqueries)</div>
+      <div class="section-desc">Una consulta dentro de otra consulta</div>
+    </div>
+    <span class="fn-category cat-avanzado">Avanzado</span>
+    <span class="toggle-icon" style="transform: rotate(0deg);">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      Una subconsulta es un SELECT dentro de otro SELECT, WHERE, HAVING o FROM. Se ejecuta primero y su resultado es usado por la consulta exterior. Pueden ser:<br><br>
+      • <strong>Escalares</strong> — devuelven un solo valor<br>
+      • <strong>De fila</strong> — devuelven una fila<br>
+      • <strong>De tabla</strong> — devuelven múltiples filas (usadas con IN, ANY, ALL, EXISTS)
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Subconsulta escalar en WHERE — empleados con salario mayor al promedio</div>
+      <div class="code-block">
+<span class="kw">SELECT</span> nombre, salario
+<span class="kw">FROM</span> empleados
+<span class="kw">WHERE</span> salario &gt; (
+  <span class="kw">SELECT</span> <span class="fn">AVG</span>(salario) <span class="kw">FROM</span> empleados
+);
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado — la subconsulta calcula primero: AVG = 750000</div>
+        <table class="result-table">
+          <tbody><tr><th>nombre</th><th>salario</th></tr>
+          <tr><td>Carlos Mora</td><td>1200000</td></tr>
+          <tr><td>Luis Pérez</td><td>2800000</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Subconsulta con IN — clientes que tienen pedidos</div>
+      <div class="code-block">
+<span class="kw">SELECT</span> nombre, email
+<span class="kw">FROM</span> clientes
+<span class="kw">WHERE</span> id <span class="kw">IN</span> (
+  <span class="kw">SELECT</span> <span class="kw">DISTINCT</span> cliente_id
+  <span class="kw">FROM</span> pedidos
+  <span class="kw">WHERE</span> total &gt; <span class="num">10000</span>
+);
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">Subconsulta en FROM (tabla derivada)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span> depto, promedio
+<span class="kw">FROM</span> (
+  <span class="kw">SELECT</span>
+    departamento <span class="kw">AS</span> <span class="col">depto</span>,
+    <span class="fn">ROUND</span>(<span class="fn">AVG</span>(salario), <span class="num">2</span>) <span class="kw">AS</span> <span class="col">promedio</span>
+  <span class="kw">FROM</span> empleados
+  <span class="kw">GROUP BY</span> departamento
+) <span class="kw">AS</span> <span class="col">promedios_depto</span>
+<span class="kw">WHERE</span> promedio &gt; <span class="num">800000</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>depto</th><th>promedio</th></tr>
+          <tr><td>IT</td><td>1200000.00</td></tr>
+          <tr><td>Gerencia</td><td>2100000.00</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="tip">Para subconsultas complejas o reutilizables, considerá usar WITH (ver sección siguiente) — es más legible.</div>
+  </div>
+</div>
+
+<!-- ==================== WITH (CTE) ==================== -->
+<div class="section" data-cat="avanzado">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">WITH (CTE — Common Table Expressions)</div>
+      <div class="section-desc">Define subconsultas con nombre reutilizables</div>
+    </div>
+    <span class="fn-category cat-avanzado">Avanzado</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Sintaxis:</strong> <code>WITH nombre_cte AS (SELECT ...) SELECT ... FROM nombre_cte</code><br><br>
+      Un CTE es como darle un nombre a una subconsulta para poder referenciarla varias veces en la misma query. Hace el código mucho más legible, especialmente cuando tenés lógica compleja o necesitás el mismo resultado en varios lugares.
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">CTE básico — equivalente limpio a la subconsulta en FROM</div>
+      <div class="code-block">
+<span class="kw">WITH</span> promedios_depto <span class="kw">AS</span> (
+  <span class="kw">SELECT</span>
+    departamento,
+    <span class="fn">ROUND</span>(<span class="fn">AVG</span>(salario), <span class="num">2</span>) <span class="kw">AS</span> <span class="col">promedio</span>
+  <span class="kw">FROM</span> empleados
+  <span class="kw">GROUP BY</span> departamento
+)
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> promedios_depto
+<span class="kw">WHERE</span> promedio &gt; <span class="num">800000</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>departamento</th><th>promedio</th></tr>
+          <tr><td>IT</td><td>1200000.00</td></tr>
+          <tr><td>Gerencia</td><td>2100000.00</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Múltiples CTEs encadenados</div>
+      <div class="code-block">
+<span class="kw">WITH</span>
+  ventas_mes <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+      <span class="fn">TO_CHAR</span>(fecha, <span class="str">'YYYY-MM'</span>) <span class="kw">AS</span> <span class="col">mes</span>,
+      <span class="fn">SUM</span>(total) <span class="kw">AS</span> <span class="col">total_mes</span>
+    <span class="kw">FROM</span> ventas
+    <span class="kw">GROUP BY</span> mes
+  ),
+  promedio_general <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> <span class="fn">AVG</span>(total_mes) <span class="kw">AS</span> <span class="col">prom</span> <span class="kw">FROM</span> ventas_mes
+  )
+<span class="kw">SELECT</span>
+  vm.mes,
+  vm.total_mes,
+  pg.prom <span class="kw">AS</span> <span class="col">promedio_global</span>,
+  vm.total_mes - pg.prom <span class="kw">AS</span> <span class="col">diferencia</span>
+<span class="kw">FROM</span> ventas_mes vm, promedio_general pg
+<span class="kw">ORDER BY</span> vm.mes;
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">Reutilizar el CTE en múltiples partes de la query</div>
+      <div class="code-block">
+<span class="kw">WITH</span> top_clientes <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> cliente_id, <span class="fn">SUM</span>(total) <span class="kw">AS</span> <span class="col">total_compras</span>
+  <span class="kw">FROM</span> pedidos
+  <span class="kw">GROUP BY</span> cliente_id
+  <span class="kw">ORDER BY</span> total_compras <span class="kw">DESC</span>
+  <span class="kw">LIMIT</span> <span class="num">10</span>
+)
+<span class="kw">SELECT</span>
+  c.nombre,
+  tc.total_compras,
+  <span class="str">'VIP'</span> <span class="kw">AS</span> <span class="col">categoria</span>
+<span class="kw">FROM</span> top_clientes tc
+<span class="kw">JOIN</span> clientes c <span class="kw">ON</span> c.id = tc.cliente_id;
+      </div>
+    </div>
+    <div class="tip">WITH hace que queries complejas sean mucho más legibles. En lugar de subconsultas anidadas, definís cada paso con un nombre descriptivo.</div>
+  </div>
+</div>
+
+<!-- ==================== FLOOR / CEIL / ROUND ==================== -->
+<div class="section" data-cat="matematica">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">FLOOR() / CEIL() / ROUND()</div>
+      <div class="section-desc">Redondeo hacia abajo, hacia arriba, o al más cercano</div>
+    </div>
+    <span class="fn-category cat-matematica">Matemática</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <code>FLOOR(n)</code> — redondea hacia abajo (trunca al entero inferior).<br>
+      <code>CEIL(n)</code> — redondea hacia arriba (entero superior).<br>
+      <code>ROUND(n, decimales)</code> — redondea al número de decimales indicado. Si omitís decimales, redondea al entero más cercano.<br><br>
+      El uso estrella de FLOOR en bases de datos: <strong>calcular décadas</strong> a partir de un año. Dividís el año entre 10, aplicás FLOOR, y multiplicás por 10.
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Comportamiento básico de los tres</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">FLOOR</span>(<span class="num">7.9</span>)      <span class="kw">AS</span> <span class="col">floor_val</span>,   <span class="cmt">-- → 7</span>
+  <span class="fn">CEIL</span>(<span class="num">7.1</span>)       <span class="kw">AS</span> <span class="col">ceil_val</span>,    <span class="cmt">-- → 8</span>
+  <span class="fn">ROUND</span>(<span class="num">7.5</span>)      <span class="kw">AS</span> <span class="col">round_val</span>,   <span class="cmt">-- → 8</span>
+  <span class="fn">ROUND</span>(<span class="num">7.456</span>, <span class="num">2</span>) <span class="kw">AS</span> <span class="col">round_dec</span>;   <span class="cmt">-- → 7.46</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>floor_val</th><th>ceil_val</th><th>round_val</th><th>round_dec</th></tr>
+          <tr><td>7</td><td>8</td><td>8</td><td>7.46</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Agrupar ventas por década — la fórmula clásica de FLOOR</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">FLOOR</span>(<span class="fn">EXTRACT</span>(<span class="kw">YEAR</span> <span class="kw">FROM</span> fecha_venta) / <span class="num">10</span>) * <span class="num">10</span> <span class="kw">AS</span> <span class="col">decada</span>,
+  <span class="fn">COUNT</span>(*) <span class="kw">AS</span> <span class="col">total_ventas</span>,
+  <span class="fn">SUM</span>(monto)    <span class="kw">AS</span> <span class="col">ingresos</span>
+<span class="kw">FROM</span> ventas
+<span class="kw">GROUP BY</span> decada
+<span class="kw">ORDER BY</span> decada;
+<span class="cmt">-- 1987 → FLOOR(198.7) * 10 = 1980 | 2003 → FLOOR(200.3) * 10 = 2000</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>decada</th><th>total_ventas</th><th>ingresos</th></tr>
+          <tr><td>2000</td><td>1240</td><td>380000.00</td></tr>
+          <tr><td>2010</td><td>4830</td><td>1920000.00</td></tr>
+          <tr><td>2020</td><td>8100</td><td>4150000.00</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">CEIL para calcular páginas necesarias (paginación)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">CEIL</span>(<span class="fn">COUNT</span>(*) / <span class="num">10.0</span>) <span class="kw">AS</span> <span class="col">total_paginas</span>
+<span class="kw">FROM</span> productos;
+<span class="cmt">-- 45 productos / 10 por página = CEIL(4.5) = 5 páginas</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>total_paginas</th></tr>
+          <tr><td>5</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="tip">La fórmula de décadas <code>FLOOR(año / 10) * 10</code> funciona para cualquier agrupación periódica: décadas, lustros (/ 5), siglos (/ 100). CEIL es ideal para paginación.</div>
+  </div>
+</div>
+
+<!-- ==================== COALESCE ==================== -->
+<div class="section" data-cat="logica">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">COALESCE()</div>
+      <div class="section-desc">Devuelve el primer valor no-nulo de una lista</div>
+    </div>
+    <span class="fn-category cat-logica">Lógica</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>Sintaxis:</strong> <code>COALESCE(val1, val2, val3, ...)</code><br><br>
+      Evalúa los argumentos en orden y devuelve el primero que no sea NULL. Si todos son NULL, devuelve NULL. Es el mecanismo estándar para definir <em>valores por defecto</em> cuando un campo puede ser nulo.
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Valor de respaldo si el campo es NULL</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  nombre,
+  <span class="fn">COALESCE</span>(telefono, celular, <span class="str">'Sin contacto'</span>) <span class="kw">AS</span> <span class="col">contacto</span>
+<span class="kw">FROM</span> clientes;
+<span class="cmt">-- Si telefono es NULL, prueba celular. Si también NULL, muestra texto fijo</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>nombre</th><th>contacto</th></tr>
+          <tr><td>Ana López</td><td>8888-4444</td></tr>
+          <tr><td>Carlos Mora</td><td>7777-3333</td></tr>
+          <tr><td>Luis Pérez</td><td>Sin contacto</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Evitar NULLs en concatenación — problema clásico con ||</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  <span class="fn">COALESCE</span>(nombre, <span class="str">''</span>) || <span class="str">' '</span> ||
+  <span class="fn">COALESCE</span>(apellido1, <span class="str">''</span>) || <span class="str">' '</span> ||
+  <span class="fn">COALESCE</span>(apellido2, <span class="str">''</span>) <span class="kw">AS</span> <span class="col">nombre_completo</span>
+<span class="kw">FROM</span> personas;
+<span class="cmt">-- Sin COALESCE, si apellido2 es NULL el resultado completo sería NULL</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>nombre_completo</th></tr>
+          <tr><td>Ana López Herrera</td></tr>
+          <tr><td>Carlos Mora </td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">COALESCE + NULLIF — combo para limpiar strings vacíos</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  id,
+  <span class="fn">COALESCE</span>(
+    <span class="fn">NULLIF</span>(<span class="fn">TRIM</span>(direccion), <span class="str">''</span>),
+    <span class="str">'Sin dirección registrada'</span>
+  ) <span class="kw">AS</span> <span class="col">direccion_limpia</span>
+<span class="kw">FROM</span> clientes;
+<span class="cmt">-- TRIM quita espacios → NULLIF convierte '' en NULL → COALESCE pone el fallback</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>id</th><th>direccion_limpia</th></tr>
+          <tr><td>1</td><td>Av. Central, San José</td></tr>
+          <tr><td>2</td><td>Sin dirección registrada</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="tip">COALESCE es la función de "fallback". NULLIF convierte valores vacíos en NULL. Usados juntos son la dupla perfecta para limpiar datos sucios de sistemas heredados.</div>
+  </div>
+</div>
+
+<!-- ==================== UPPER / LOWER ==================== -->
+<div class="section" data-cat="texto">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">UPPER() / LOWER()</div>
+      <div class="section-desc">Convierte texto a mayúsculas o minúsculas</div>
+    </div>
+    <span class="fn-category cat-texto">Texto</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <code>UPPER(texto)</code> — convierte todo a MAYÚSCULAS.<br>
+      <code>LOWER(texto)</code> — convierte todo a minúsculas.<br>
+      <code>INITCAP(texto)</code> — Primera Letra De Cada Palabra En Mayúscula.<br><br>
+      Esenciales para comparaciones insensibles a mayúsculas y para normalizar datos antes de almacenarlos o compararlos.
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">Comparación insensible a mayúsculas — el caso típico</div>
+      <div class="code-block">
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> productos
+<span class="kw">WHERE</span> <span class="fn">UPPER</span>(<span class="fn">TRIM</span>(categoria)) = <span class="str">'ELECTRONICA'</span>;
+<span class="cmt">-- Encuentra 'Electronica', 'ELECTRONICA', 'electronica', '  Electronica  '</span>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">Normalizar emails antes de guardar</div>
+      <div class="code-block">
+<span class="kw">UPDATE</span> usuarios
+<span class="kw">SET</span> email = <span class="fn">LOWER</span>(<span class="fn">TRIM</span>(email));
+<span class="cmt">-- 'Usuario@Gmail.COM ' → 'usuario@gmail.com'</span>
+
+<span class="cmt">-- También útil al comparar sin modificar la tabla:</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> usuarios
+<span class="kw">WHERE</span> <span class="fn">LOWER</span>(email) = <span class="fn">LOWER</span>(<span class="str">'Usuario@Gmail.com'</span>);
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">INITCAP para presentar nombres con formato bonito</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  id,
+  <span class="fn">INITCAP</span>(<span class="fn">LOWER</span>(nombre))    <span class="kw">AS</span> <span class="col">nombre</span>,
+  <span class="fn">INITCAP</span>(<span class="fn">LOWER</span>(apellido))  <span class="kw">AS</span> <span class="col">apellido</span>
+<span class="kw">FROM</span> empleados;
+<span class="cmt">-- 'MARIA JOSE' → 'Maria Jose' | 'juan' → 'Juan'</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>id</th><th>nombre</th><th>apellido</th></tr>
+          <tr><td>1</td><td>Maria Jose</td><td>Vargas</td></tr>
+          <tr><td>2</td><td>Luis</td><td>Jiménez</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="tip">Regla de oro: guardá los datos normalizados (LOWER para emails, UPPER o INITCAP para nombres) y comparalos siempre en el mismo caso. Evita duplicados "invisibles".</div>
+  </div>
+</div>
+
+<!-- ==================== JOINs ==================== -->
+<div class="section" data-cat="joins">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">JOINs (INNER, LEFT, SELF)</div>
+      <div class="section-desc">Combina filas de dos o más tablas según una condición</div>
+    </div>
+    <span class="fn-category cat-joins">JOINs</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      Un JOIN une tablas por una columna en común. Los tipos principales:<br><br>
+      <code>INNER JOIN</code> — solo filas que tienen coincidencia en AMBAS tablas.<br>
+      <code>LEFT JOIN</code> — TODAS las filas de la tabla izquierda + las que coincidan de la derecha (NULL si no hay match).<br>
+      <code>RIGHT JOIN</code> — lo inverso del LEFT.<br>
+      <code>FULL OUTER JOIN</code> — todas las filas de ambas tablas, con NULL donde no haya match.<br>
+      <code>SELF JOIN</code> — una tabla unida consigo misma (para relaciones jerárquicas).
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1 — INNER JOIN</div>
+      <div class="example-title">Consolidado demográfico: ciudadanos con su descripción de sexo</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  s."Des_Sexo",
+  <span class="fn">COUNT</span>(c."TC_Cedula") <span class="kw">AS</span> <span class="col">total_ciudadanos</span>
+<span class="kw">FROM</span> public."T_Sexo" s
+<span class="kw">INNER JOIN</span> public."Costarricense" c
+  <span class="kw">ON</span> s."Cod_sexo" = c."TN_Sexo"::TEXT  <span class="cmt">-- cast necesario: bigint → text</span>
+<span class="kw">GROUP BY</span> s."Des_Sexo";
+<span class="cmt">-- Solo muestra sexos que tienen al menos 1 ciudadano</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>Des_Sexo</th><th>total_ciudadanos</th></tr>
+          <tr><td>Masculino</td><td>2481034</td></tr>
+          <tr><td>Femenino</td><td>2519823</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2 — LEFT JOIN</div>
+      <div class="example-title">Mismo reporte pero incluye sexos SIN ciudadanos (práctica 3.3)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  s."Des_Sexo",
+  <span class="fn">COUNT</span>(c."TC_Cedula") <span class="kw">AS</span> <span class="col">total_ciudadanos</span>
+<span class="kw">FROM</span> public."T_Sexo" s
+<span class="kw">LEFT JOIN</span> public."Costarricense" c
+  <span class="kw">ON</span> s."Cod_sexo" = c."TN_Sexo"::TEXT
+<span class="kw">GROUP BY</span> s."Des_Sexo"
+<span class="kw">ORDER BY</span> total_ciudadanos <span class="kw">DESC</span>;
+<span class="cmt">-- Aparecen TODOS los registros de T_Sexo, con 0 si no tienen ciudadanos</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado — nótese el sexo sin registros</div>
+        <table class="result-table">
+          <tbody><tr><th>Des_Sexo</th><th>total_ciudadanos</th></tr>
+          <tr><td>Masculino</td><td>2481034</td></tr>
+          <tr><td>Femenino</td><td>2519823</td></tr>
+          <tr><td>No binario</td><td>0</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3 — SELF JOIN</div>
+      <div class="example-title">Ciudadano con datos de su madre (práctica 3.6)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  hijo."TC_Cedula"   <span class="kw">AS</span> <span class="col">cedula_hijo</span>,
+  <span class="fn">CONCAT</span>(hijo."TC_Nombre", <span class="str">' '</span>, hijo."TC_Apellido1") <span class="kw">AS</span> <span class="col">nombre_hijo</span>,
+  madre."TC_Cedula"  <span class="kw">AS</span> <span class="col">cedula_madre</span>,
+  <span class="fn">CONCAT</span>(madre."TC_Nombre", <span class="str">' '</span>, madre."TC_Apellido1") <span class="kw">AS</span> <span class="col">nombre_madre</span>
+<span class="kw">FROM</span> public."Costarricense" hijo
+<span class="kw">INNER JOIN</span> public."Costarricense" madre
+  <span class="kw">ON</span> hijo."TC_Cedula_Madre" = madre."TC_Cedula";
+<span class="cmt">-- La misma tabla aparece dos veces con alias distintos: hijo y madre</span>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>cedula_hijo</th><th>nombre_hijo</th><th>cedula_madre</th><th>nombre_madre</th></tr>
+          <tr><td>101230456</td><td>Carlos Morales</td><td>202110789</td><td>María Castro</td></tr>
+          <tr><td>301440122</td><td>Ana González</td><td>501880345</td><td>Rosa González</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="tip">La regla para elegir JOIN: ¿necesitás las filas sin match? LEFT JOIN. ¿Solo las que coinciden? INNER JOIN. ¿La tabla se relaciona con ella misma? SELF JOIN con dos alias distintos.</div>
+  </div>
+</div>
+
+<!-- ==================== HAVING vs WHERE ==================== -->
+<div class="section" data-cat="agregacion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">HAVING vs WHERE</div>
+      <div class="section-desc">Cuándo filtrar antes de agrupar y cuándo después</div>
+    </div>
+    <span class="fn-category cat-agregacion">Agregación</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <code>WHERE</code> filtra filas <em>antes</em> de que se forme el grupo — no puede usar funciones de agregación.<br>
+      <code>HAVING</code> filtra <em>después</em> de agrupar — puede usar SUM, COUNT, AVG, etc.<br><br>
+      Orden de ejecución real en SQL: <code>FROM → JOIN → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT</code>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 1</div>
+      <div class="example-title">WHERE filtra filas individuales antes de agrupar</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  TC_Lugar_Nacimiento,
+  <span class="fn">COUNT</span>(*) <span class="kw">AS</span> <span class="col">total</span>
+<span class="kw">FROM</span> public."Costarricense"
+<span class="kw">WHERE</span> TN_Fallecido = <span class="num">0</span>          <span class="cmt">-- filtra antes: solo vivos</span>
+<span class="kw">GROUP BY</span> TC_Lugar_Nacimiento;
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 2</div>
+      <div class="example-title">HAVING filtra grupos — lugares con más de 5000 nacimientos (práctica 3.7)</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  TC_Lugar_Nacimiento <span class="kw">AS</span> <span class="col">lugar</span>,
+  <span class="fn">COUNT</span>(*) <span class="kw">AS</span> <span class="col">total_nacimientos</span>
+<span class="kw">FROM</span> public."Costarricense"
+<span class="kw">WHERE</span>
+  TC_Lugar_Nacimiento <span class="kw">IS NOT NULL</span>
+  <span class="kw">AND</span> <span class="fn">TRIM</span>(TC_Lugar_Nacimiento) <span class="op">&lt;&gt;</span> <span class="str">''</span>
+<span class="kw">GROUP BY</span> TC_Lugar_Nacimiento
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) &gt; <span class="num">5000</span>         <span class="cmt">-- filtra grupos después de agrupar</span>
+<span class="kw">ORDER BY</span> total_nacimientos <span class="kw">DESC</span>;
+      </div>
+      <div class="result-block">
+        <div class="result-label">Resultado</div>
+        <table class="result-table">
+          <tbody><tr><th>lugar</th><th>total_nacimientos</th></tr>
+          <tr><td>San José</td><td>48320</td></tr>
+          <tr><td>Alajuela</td><td>21400</td></tr>
+          <tr><td>Heredia</td><td>18750</td></tr>
+          <tr><td>Cartago</td><td>14230</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 3</div>
+      <div class="example-title">Combinando WHERE y HAVING en la misma query</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  departamento,
+  <span class="fn">COUNT</span>(*) <span class="kw">AS</span> <span class="col">empleados_activos</span>,
+  <span class="fn">ROUND</span>(<span class="fn">AVG</span>(salario), <span class="num">0</span>) <span class="kw">AS</span> <span class="col">salario_prom</span>
+<span class="kw">FROM</span> empleados
+<span class="kw">WHERE</span> activo = <span class="kw">TRUE</span>               <span class="cmt">-- solo activos (filtra filas)</span>
+<span class="kw">GROUP BY</span> departamento
+<span class="kw">HAVING</span> <span class="fn">AVG</span>(salario) &gt; <span class="num">800000</span>    <span class="cmt">-- solo deptos con buen promedio (filtra grupos)</span>
+<span class="kw">ORDER BY</span> salario_prom <span class="kw">DESC</span>;
+      </div>
+    </div>
+    <div class="tip">Truco mental: WHERE = "¿qué filas entran al grupo?" / HAVING = "¿qué grupos sobreviven?" No podés poner COUNT(*) en WHERE — eso revienta la query.</div>
+  </div>
+</div>
+
+<script>
+function toggle(header) {
+  const icon = header.querySelector('.toggle-icon');
+  const body = header.nextElementSibling;
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+}
+
+function filter(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.section').forEach(s => {
+    if (cat === 'all' || s.dataset.cat === cat) {
+      s.classList.remove('hidden');
+    } else {
+      s.classList.add('hidden');
+    }
+  });
+}
+</script>
+
+
+</body></html>
