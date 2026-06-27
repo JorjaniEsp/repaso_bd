@@ -133,6 +133,7 @@
   .cat-logica { background: #3a1e2a; color: #fb7185; }
   .cat-matematica { background: #2a1e3a; color: #c084fc; }
   .cat-joins { background: #1e2a3a; color: #38bdf8; }
+  .cat-normalizacion { background: #2a3a1e; color: #a3e635; }
 
   .section-desc {
     color: var(--muted);
@@ -283,6 +284,117 @@
   .tip::before { content: '💡'; flex-shrink: 0; }
 
   .hidden { display: none !important; }
+
+  /* ===== Tablas de Normalización (datos reales, no SQL) ===== */
+  .norm-table-wrap {
+    margin: 14px 0 18px;
+    overflow-x: auto;
+  }
+
+  .norm-table-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  table.norm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  table.norm-table th {
+    background: #0f1623;
+    color: var(--text);
+    text-align: left;
+    padding: 8px 12px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+
+  table.norm-table td {
+    padding: 7px 12px;
+    color: #c9d1d9;
+    border-bottom: 1px solid #1a2230;
+    white-space: nowrap;
+  }
+
+  table.norm-table tr:last-child td { border-bottom: none; }
+  table.norm-table tr:hover td { background: #131a28; }
+
+  /* Columna llave primaria simple */
+  th.col-pk, td.col-pk { background: rgba(74, 222, 128, 0.14); }
+  th.col-pk { color: var(--accent) !important; border-bottom: 2px solid var(--accent); }
+  td.col-pk { color: var(--accent); font-weight: 600; }
+
+  /* Columna llave primaria COMPUESTA (2+ columnas que juntas forman la PK) */
+  th.col-pkc, td.col-pkc { background: rgba(56, 189, 248, 0.14); }
+  th.col-pkc { color: var(--accent2) !important; border-bottom: 2px solid var(--accent2); }
+  td.col-pkc { color: var(--accent2); font-weight: 600; }
+
+  /* Columna llave foránea */
+  th.col-fk, td.col-fk { background: rgba(251, 146, 60, 0.14); }
+  th.col-fk { color: var(--accent4) !important; border-bottom: 2px solid var(--accent4); }
+  td.col-fk { color: var(--accent4); }
+
+  /* Columna determinante "raro" que rompe BCNF (no es clave pero determina algo) */
+  th.col-det, td.col-det { background: rgba(244, 114, 182, 0.14); }
+  th.col-det { color: var(--accent3) !important; border-bottom: 2px solid var(--accent3); }
+  td.col-det { color: var(--accent3); font-weight: 600; }
+
+  .norm-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 10px 0 16px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  .norm-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .norm-legend .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  .dot-pk { background: var(--accent); }
+  .dot-pkc { background: var(--accent2); }
+  .dot-fk { background: var(--accent4); }
+  .dot-det { background: var(--accent3); }
+
+  .norm-problem {
+    font-size: 12.5px;
+    color: #f49999;
+    background: #2a1518;
+    border-left: 3px solid #f87171;
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin: 10px 0;
+  }
+
+  .norm-fix {
+    font-size: 12.5px;
+    color: #86c887;
+    background: #15241a;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin: 10px 0 16px;
+  }
 </style>
 </head>
 <body>
@@ -303,6 +415,7 @@
   <button class="filter-btn" onclick="filter(&#39;avanzado&#39;, this)">🧩 Avanzado</button>
   <button class="filter-btn" onclick="filter(&#39;matematica&#39;, this)">🔢 Matemática</button>
   <button class="filter-btn" onclick="filter(&#39;joins&#39;, this)">🔗 JOINs</button>
+  <button class="filter-btn" onclick="filter(&#39;normalizacion&#39;, this)">🧱 Normalización</button>
 </div>
 
 <!-- ==================== TO_DATE ==================== -->
@@ -1630,7 +1743,38 @@
         </tbody></table>
       </div>
     </div>
-    <div class="tip">La regla para elegir JOIN: ¿necesitás las filas sin match? LEFT JOIN. ¿Solo las que coinciden? INNER JOIN. ¿La tabla se relaciona con ella misma? SELF JOIN con dos alias distintos.</div>
+    <div class="example-block">
+      <div class="example-label">Ejemplo 4 — RIGHT JOIN</div>
+      <div class="example-title">Lo mismo que el Ejemplo 2, pero escrito desde el otro lado</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  s."Des_Sexo",
+  <span class="fn">COUNT</span>(c."TC_Cedula") <span class="kw">AS</span> <span class="col">total_ciudadanos</span>
+<span class="kw">FROM</span> public."Costarricense" c
+<span class="kw">RIGHT JOIN</span> public."T_Sexo" s
+  <span class="kw">ON</span> s."Cod_sexo" = c."TN_Sexo"::TEXT
+<span class="kw">GROUP BY</span> s."Des_Sexo";
+<span class="cmt">-- RIGHT JOIN prioriza la tabla de la derecha (T_Sexo): salen TODOS sus registros</span>
+<span class="cmt">-- En la práctica casi nadie usa RIGHT JOIN: es más claro invertir las tablas y usar LEFT JOIN</span>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <div class="example-label">Ejemplo 5 — FULL OUTER JOIN</div>
+      <div class="example-title">Detectar huérfanos en ambos lados: sexos sin ciudadanos Y ciudadanos con código de sexo inválido</div>
+      <div class="code-block">
+<span class="kw">SELECT</span>
+  s."Des_Sexo",
+  c."TC_Cedula"
+<span class="kw">FROM</span> public."T_Sexo" s
+<span class="kw">FULL OUTER JOIN</span> public."Costarricense" c
+  <span class="kw">ON</span> s."Cod_sexo" = c."TN_Sexo"::TEXT
+<span class="kw">WHERE</span> s."Cod_sexo" <span class="kw">IS NULL</span> <span class="kw">OR</span> c."TC_Cedula" <span class="kw">IS NULL</span>;
+<span class="cmt">-- Trae TODO de ambas tablas, con NULL donde no hay match en cualquiera de los dos lados</span>
+<span class="cmt">-- El WHERE final es un truco clásico para auditar datos huérfanos o inconsistentes</span>
+      </div>
+    </div>
+    <div class="tip">La regla para elegir JOIN: ¿necesitás las filas sin match? LEFT JOIN. ¿Solo las que coinciden? INNER JOIN. ¿La tabla se relaciona con ella misma? SELF JOIN con dos alias distintos. RIGHT JOIN casi nunca se usa en la práctica — siempre se puede reescribir como LEFT JOIN invirtiendo el orden de las tablas, y es más fácil de leer. FULL OUTER JOIN sirve sobre todo para auditorías de integridad.</div>
   </div>
 </div>
 
@@ -1709,6 +1853,433 @@
     <div class="tip">Truco mental: WHERE = "¿qué filas entran al grupo?" / HAVING = "¿qué grupos sobreviven?" No podés poner COUNT(*) en WHERE — eso revienta la query.</div>
   </div>
 </div>
+
+<!-- ==================== NORMALIZACIÓN: INTRO ==================== -->
+<div class="section" data-cat="normalizacion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">¿Qué es normalizar?</div>
+      <div class="section-desc">La idea general, y el caso que vamos a normalizar paso a paso</div>
+    </div>
+    <span class="fn-category cat-normalizacion">Normalización</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      Normalizar es <strong>reorganizar una tabla en varias tablas más pequeñas</strong> para que cada dato viva en un solo lugar, sin repetirse innecesariamente y sin mezclar hechos que no tienen relación entre sí.<br><br>
+      Cada "Forma Normal" (FN) es una regla más estricta que la anterior — es una escalera: para estar en 2FN ya tenés que cumplir 1FN, para estar en 3FN ya tenés que cumplir 2FN, etc.<br><br>
+      El problema que resuelven siempre es el mismo: evitar <strong>redundancia</strong> (el mismo dato repetido en varias filas), porque la redundancia es la causa de <strong>anomalías</strong> al insertar, actualizar o eliminar datos.<br><br>
+      Vamos a usar el mismo caso en todas las tarjetas siguientes — la tabla universal <strong>Registro_Academico_Total</strong> — e ir normalizándola en cada paso, igual que en la práctica.
+    </div>
+
+    <div class="norm-table-label">Tabla original (sin normalizar) — Registro_Academico_Total</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th>EstudianteID</th><th>Nombre</th><th>CorreoInstitucional</th><th>Curso</th><th>Calificación</th><th>ÁreaEstudio</th><th>ProfesorTutor</th><th>Hobbies</th><th>CertificacionesTecnicas</th></tr>
+        <tr><td>1</td><td>Juan</td><td>juan@ucr.ac.cr</td><td>Matemáticas</td><td>85</td><td>Telemática</td><td>Sr. Pérez</td><td>Fútbol, Pintura</td><td>CCNA, AWS Cloud</td></tr>
+        <tr><td>1</td><td>Juan</td><td>juan@ucr.ac.cr</td><td>Historia</td><td>90</td><td>Telemática</td><td>Sr. Pérez</td><td>Fútbol, Pintura</td><td>CCNA, AWS Cloud</td></tr>
+        <tr><td>2</td><td>María</td><td>maria@ucr.ac.cr</td><td>Matemáticas</td><td>92</td><td>Inteligencia Artificial</td><td>Sra. García</td><td>Danza, Lectura</td><td>Azure AI, Scrum Master</td></tr>
+        <tr><td>2</td><td>María</td><td>maria@ucr.ac.cr</td><td>Literatura</td><td>87</td><td>Inteligencia Artificial</td><td>Sra. García</td><td>Danza, Lectura</td><td>Azure AI, Scrum Master</td></tr>
+        <tr><td>2</td><td>María</td><td>maria@ucr.ac.cr</td><td>Matemáticas</td><td>92</td><td>Ciencia de Datos</td><td>Sr. López</td><td>Danza, Lectura</td><td>Azure AI, Scrum Master</td></tr>
+      </table>
+    </div>
+    <div class="norm-problem">Ya a simple vista hay 3 problemas: celdas con listas (Hobbies, Certificaciones), datos del estudiante repetidos en cada fila (Nombre, Correo), y el ProfesorTutor pegado al área de estudio sin necesidad.</div>
+
+    <div class="norm-legend">
+      <span><span class="dot dot-pk"></span> Llave primaria (PK)</span>
+      <span><span class="dot dot-pkc"></span> Llave primaria compuesta</span>
+      <span><span class="dot dot-fk"></span> Llave foránea (FK)</span>
+      <span><span class="dot dot-det"></span> Determinante que rompe BCNF</span>
+    </div>
+    <div class="tip">No memoricés las definiciones formales. Memorizá la PREGUNTA que responde cada forma normal — eso es lo que te van a evaluar en la defensa oral. Las preguntas exactas están en la última tarjeta de esta sección.</div>
+  </div>
+</div>
+
+<!-- ==================== 1FN ==================== -->
+<div class="section" data-cat="normalizacion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">1FN — Primera Forma Normal</div>
+      <div class="section-desc">Cada celda debe guardar un solo valor atómico (nada de listas dentro de una columna)</div>
+    </div>
+    <span class="fn-category cat-normalizacion">Normalización</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>La pregunta que responde:</strong> ¿esta columna guarda UN solo valor, o varios valores escondidos en un string separado por comas?<br><br>
+      Una tabla está en 1FN si cada columna tiene un valor atómico (indivisible) y no hay listas ni grupos repetidos.<br><br>
+      En nuestra tabla, <strong>Hobbies</strong> y <strong>CertificacionesTecnicas</strong> son multivaluados independientes: "Fútbol, Pintura" no es un valor, son dos hechos comprimidos en una celda.
+    </div>
+
+    <div class="norm-problem">Juan tiene 2 hobbies Y 2 certificaciones. Para no perder esa información, cada combinación se desdobla en una fila — eso multiplica las filas que tenían más de un valor en esas columnas.</div>
+
+    <div class="norm-table-label">Después de 1FN — una fila por cada combinación hobby × certificación</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th>EstudianteID</th><th>Nombre</th><th>CorreoInstitucional</th><th>Curso</th><th>Calificación</th><th>ÁreaEstudio</th><th>ProfesorTutor</th><th>Hobbies</th><th>CertificacionesTecnicas</th></tr>
+        <tr><td>1</td><td>Juan</td><td>juan@ucr.ac.cr</td><td>Matemáticas</td><td>85</td><td>Telemática</td><td>Sr. Pérez</td><td>Fútbol</td><td>CCNA</td></tr>
+        <tr><td>1</td><td>Juan</td><td>juan@ucr.ac.cr</td><td>Matemáticas</td><td>85</td><td>Telemática</td><td>Sr. Pérez</td><td>Pintura</td><td>AWS Cloud</td></tr>
+        <tr><td>1</td><td>Juan</td><td>juan@ucr.ac.cr</td><td>Historia</td><td>90</td><td>Telemática</td><td>Sr. Pérez</td><td>Fútbol</td><td>CCNA</td></tr>
+        <tr><td>1</td><td>Juan</td><td>juan@ucr.ac.cr</td><td>Historia</td><td>90</td><td>Telemática</td><td>Sr. Pérez</td><td>Pintura</td><td>AWS Cloud</td></tr>
+        <tr><td>2</td><td>María</td><td>maria@ucr.ac.cr</td><td>Matemáticas</td><td>92</td><td>Inteligencia Artificial</td><td>Sra. García</td><td>Danza</td><td>Azure AI</td></tr>
+        <tr><td>2</td><td>María</td><td>maria@ucr.ac.cr</td><td>Matemáticas</td><td>92</td><td>Inteligencia Artificial</td><td>Sra. García</td><td>Lectura</td><td>Scrum Master</td></tr>
+        <tr><td>2</td><td>María</td><td>maria@ucr.ac.cr</td><td>Literatura</td><td>87</td><td>Inteligencia Artificial</td><td>Sra. García</td><td>Danza</td><td>Azure AI</td></tr>
+        <tr><td>2</td><td>María</td><td>maria@ucr.ac.cr</td><td>Literatura</td><td>87</td><td>Inteligencia Artificial</td><td>Sra. García</td><td>Lectura</td><td>Scrum Master</td></tr>
+        <tr><td>2</td><td>María</td><td>maria@ucr.ac.cr</td><td>Matemáticas</td><td>92</td><td>Ciencia de Datos</td><td>Sr. López</td><td>Danza</td><td>Azure AI</td></tr>
+        <tr><td>2</td><td>María</td><td>maria@ucr.ac.cr</td><td>Matemáticas</td><td>92</td><td>Ciencia de Datos</td><td>Sr. López</td><td>Lectura</td><td>Scrum Master</td></tr>
+      </table>
+    </div>
+    <div class="norm-fix">Listo: cada celda ahora tiene un solo valor. Pero noten el impacto del crecimiento de tuplas — pasamos de 5 filas a 10, y eso es ESPERADO. Cada fila ahora representa un hecho atómico, no varios hechos comprimidos. Este crecimiento es justamente la señal de que todavía hay más trabajo (2FN, 4FN) para separar lo que no debería estar junto.</div>
+    <div class="tip">Esta tabla en 1FN todavía es un desastre de redundancia — repetimos Nombre, Correo, ProfesorTutor en cada fila. 1FN solo arregla la atomicidad, no la redundancia. Eso lo resuelven 2FN, 3FN y 4FN.</div>
+  </div>
+</div>
+
+<!-- ==================== 2FN ==================== -->
+<div class="section" data-cat="normalizacion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">2FN — Segunda Forma Normal</div>
+      <div class="section-desc">Eliminar dependencias parciales sobre claves primarias compuestas</div>
+    </div>
+    <span class="fn-category cat-normalizacion">Normalización</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>La pregunta que responde:</strong> si mi llave primaria tiene 2+ columnas, ¿hay alguna columna que dependa de SOLO UNA parte de esa llave, en vez de depender de la llave completa?<br><br>
+      2FN solo aplica cuando hay una <strong>clave compuesta</strong>. En nuestra tabla de 1FN, la única forma de identificar una fila de manera única sería con prácticamente todas las columnas — eso es una señal de que la tabla está mezclando varias entidades distintas (Estudiante, Calificación, Tutoría) que hay que separar.<br><br>
+      Para encontrar las dependencias parciales nos preguntamos, por cada columna: <em>¿de qué depende este dato en la vida real?</em>
+    </div>
+
+    <div class="norm-problem">Nombre y CorreoInstitucional dependen SOLO de EstudianteID (no del curso ni del área). Calificación depende de {EstudianteID + Curso} completos. ProfesorTutor depende de {EstudianteID + ÁreaEstudio} completos. Cada grupo de columnas pertenece a una tabla distinta.</div>
+
+    <div class="norm-table-label">Tabla: Estudiantes</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-pk">EstudianteID</th><th>Nombre</th><th>CorreoInstitucional</th></tr>
+        <tr><td class="col-pk">1</td><td>Juan</td><td>juan@ucr.ac.cr</td></tr>
+        <tr><td class="col-pk">2</td><td>María</td><td>maria@ucr.ac.cr</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-table-label">Tabla: Calificaciones — PK compuesta (EstudianteID + Curso)</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-fk col-pkc">EstudianteID</th><th class="col-pkc">Curso</th><th>Calificación</th></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">Matemáticas</td><td>85</td></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">Historia</td><td>90</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Matemáticas</td><td>92</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Literatura</td><td>87</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Matemáticas</td><td>92</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-table-label">Tabla: Áreas — PK compuesta (EstudianteID + ÁreaEstudio)</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-fk col-pkc">EstudianteID</th><th class="col-pkc">ÁreaEstudio</th><th>ProfesorTutor</th></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">Telemática</td><td>Sr. Pérez</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Inteligencia Artificial</td><td>Sra. García</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Ciencia de Datos</td><td>Sr. López</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-fix">Nota: por ahora dejamos Hobbies y CertificacionesTecnicas fuera — eso lo resolvemos en 4FN, no acá. Si te fijás, ya no se repite "Juan" ni "juan@ucr.ac.cr" cinco veces: cada estudiante vive en una sola fila de la tabla Estudiantes.</div>
+    <div class="tip">Truco para detectar 2FN rápido en un examen: tachá la PK compuesta y preguntate de cada columna no-clave "¿necesito las DOS partes de la llave para saber este valor, o me basta con una?" Si te basta con una, hay dependencia parcial y esa columna se va a otra tabla.</div>
+  </div>
+</div>
+
+<!-- ==================== 3FN ==================== -->
+<div class="section" data-cat="normalizacion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">3FN — Tercera Forma Normal</div>
+      <div class="section-desc">Eliminar dependencias transitivas (columna que depende de otra columna que no es la llave)</div>
+    </div>
+    <span class="fn-category cat-normalizacion">Normalización</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>La pregunta que responde:</strong> ¿hay una columna que depende de OTRA columna no-clave, en vez de depender directamente de la llave primaria?<br><br>
+      Esto se llama <strong>dependencia transitiva</strong>: PK → columna_A → columna_B. La columna_B depende de la PK "por el camino largo", pasando primero por columna_A.<br><br>
+      Revisemos las 3 tablas que nos quedaron de 2FN, columna por columna.
+    </div>
+
+    <div class="norm-fix">Buena noticia: en nuestro caso, las tablas Estudiantes, Calificaciones y Áreas ya quedaron limpias de 3FN. Nombre y Correo dependen directo de EstudianteID (no hay un atributo intermedio). Calificación depende directo de {EstudianteID, Curso}. Y aunque ProfesorTutor "parece" depender de ÁreaEstudio, la regla 3 del enunciado dice que un área puede tener varios profesores — así que NO hay una dependencia transitiva clara todavía. Por eso este caso pasa directo a BCNF, que es donde sí aparece el problema real.</div>
+
+    <div class="norm-table-label">Las 3 tablas siguen igual que en 2FN (no aplica 3FN en este caso)</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-fk col-pkc">EstudianteID</th><th class="col-pkc">ÁreaEstudio</th><th class="col-det">ProfesorTutor</th></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">Telemática</td><td class="col-det">Sr. Pérez</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Inteligencia Artificial</td><td class="col-det">Sra. García</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Ciencia de Datos</td><td class="col-det">Sr. López</td></tr>
+      </table>
+    </div>
+    <div class="norm-problem">Marqué ProfesorTutor en rosado a propósito: NO viola 3FN, pero sí va a violar BCNF. La diferencia entre ambas formas normales es justo lo que vamos a ver en la próxima tarjeta.</div>
+    <div class="tip">Diferencia clave 2FN vs 3FN para no confundirte en la defensa: 2FN mira hacia ADENTRO de una llave compuesta (¿depende de toda la llave o de una parte?). 3FN mira columnas no-clave entre ELLAS (¿una depende de otra que no es la llave?). En un ejemplo más simple — Empleado(id, departamento_id, nombre_departamento) — nombre_departamento SÍ depende transitivamente de departamento_id, y por eso violaría 3FN.</div>
+  </div>
+</div>
+
+<!-- ==================== BCNF ==================== -->
+<div class="section" data-cat="normalizacion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">BCNF — Boyce-Codd</div>
+      <div class="section-desc">Evaluar la relación de tutorías: todo determinante debe ser una clave candidata</div>
+    </div>
+    <span class="fn-category cat-normalizacion">Normalización</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>La pregunta que responde:</strong> para cada dependencia "X determina a Y" en la tabla, ¿X es una clave candidata (algo que identifica la fila por sí solo)?<br><br>
+      Un <strong>determinante</strong> es cualquier columna que, conociendo su valor, te permite saber el valor de otra con certeza. BCNF exige que TODO determinante sea clave — sin excepciones, ni siquiera las que 3FN permite.<br><br>
+      Repasemos la regla 3 del enunciado: <em>"la combinación {EstudianteID, ÁreaEstudio} determina al ProfesorTutor. Sin embargo, cada profesor está adscrito de forma exclusiva a una única ÁreaEstudio."</em> Eso significa: <strong>ProfesorTutor → ÁreaEstudio</strong> también es una dependencia válida — y ProfesorTutor NO es clave de toda la tabla Áreas (la PK ahí es {EstudianteID, ÁreaEstudio}).
+    </div>
+
+    <div class="norm-problem">Anomalía si nos quedamos en 3FN: ProfesorTutor determina ÁreaEstudio, pero ProfesorTutor no es clave candidata de la tabla Áreas. Eso significa que el dato "el Sr. Pérez enseña Telemática" queda disperso y potencialmente contradictorio si Pérez también apareciera tutoreando a otro estudiante con un área distinta escrita por error — la base de datos no tiene ninguna regla que lo impida.</div>
+
+    <div class="norm-table-label">Tabla: Áreas_Profesor — ProfesorTutor ahora SÍ es clave candidata</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-pk">ProfesorTutor</th><th>ÁreaEstudio</th></tr>
+        <tr><td class="col-pk">Sr. Pérez</td><td>Telemática</td></tr>
+        <tr><td class="col-pk">Sra. García</td><td>Inteligencia Artificial</td></tr>
+        <tr><td class="col-pk">Sr. López</td><td>Ciencia de Datos</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-table-label">Tabla: Tutorías — relación Estudiante-Profesor</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-fk col-pkc">EstudianteID</th><th class="col-fk col-pkc">ProfesorTutor</th></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-fk col-pkc">Sr. Pérez</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-fk col-pkc">Sra. García</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-fk col-pkc">Sr. López</td></tr>
+      </table>
+    </div>
+    <div class="norm-fix">Ahora ÁreaEstudio vive en un solo lugar por profesor (tabla Áreas_Profesor, PK = ProfesorTutor) y la relación de quién tutorea a quién vive aparte (tabla Tutorías). Si el Sr. Pérez cambia de área algún día, se actualiza en UNA sola fila, no en N filas de estudiantes.</div>
+    <div class="tip">Pregunta de defensa oral clásica: "¿por qué separó ProfesorTutor en su propia tabla?" Respuesta BCNF: "porque ProfesorTutor determinaba ÁreaEstudio sin ser clave candidata de toda la relación Áreas — eso viola Boyce-Codd aunque la tabla ya cumplía 3FN, porque ÁreaEstudio no era parte de ninguna llave alternativa."</div>
+  </div>
+</div>
+
+<!-- ==================== 4FN ==================== -->
+<div class="section" data-cat="normalizacion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">4FN — Cuarta Forma Normal</div>
+      <div class="section-desc">Aislar las dependencias multivaluadas independientes (Hobbies y Certificaciones)</div>
+    </div>
+    <span class="fn-category cat-normalizacion">Normalización</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>La pregunta que responde:</strong> ¿hay dos atributos multivaluados independientes mezclados en la misma tabla?<br><br>
+      Esto es justo lo que dejamos pendiente desde 1FN. Hobbies y CertificacionesTecnicas son <strong>independencias multivaluadas separadas</strong> (regla 4 y regla 5 del enunciado): un estudiante tiene varios hobbies Y varias certificaciones, pero NINGÚN hobby está relacionado con NINGUNA certificación en particular.<br><br>
+      El síntoma de no separarlas es el <strong>producto cartesiano oculto</strong>: si Juan tiene 2 hobbies y 2 certificaciones, terminás necesitando 4 filas para representar solo 4 hechos reales (2+2), inventando combinaciones que nunca existieron como tales.
+    </div>
+
+    <div class="norm-problem">Recordemos la tabla de 1FN: para Juan generamos 2 filas (Fútbol+CCNA, Pintura+AWS Cloud) — eso afirma falsamente que "Fútbol va emparejado con CCNA" cuando en realidad son dos listas totalmente independientes que solo coincidían por casualidad de orden.</div>
+
+    <div class="norm-table-label">Tabla: Estudiantes_Hobbies — PK compuesta</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-fk col-pkc">EstudianteID</th><th class="col-pkc">Hobby</th></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">Fútbol</td></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">Pintura</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Danza</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Lectura</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-table-label">Tabla: Estudiantes_Certificaciones — PK compuesta</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-fk col-pkc">EstudianteID</th><th class="col-pkc">CertificacionTecnica</th></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">CCNA</td></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">AWS Cloud</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Azure AI</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Scrum Master</td></tr>
+      </table>
+    </div>
+    <div class="norm-fix">Ahora 4 hechos reales = 4 filas en cada tabla (8 en total), no 4 filas "combinadas" que mentían sobre una relación inexistente. Cada tabla cruzada representa un solo hecho atómico independiente.</div>
+    <div class="tip">Cómo detectar 4FN en un examen sin enredarte: si ves DOS columnas multivaluadas que no dependen entre sí (hobby y certificación, idioma y proyecto), y para no perder datos tenés que generar el producto cartesiano de ambas — esa es la señal. La solución siempre es la misma: una tabla cruzada por cada atributo multivaluado, nunca juntarlos en una sola.</div>
+  </div>
+</div>
+
+<!-- ==================== 5FN ==================== -->
+<div class="section" data-cat="normalizacion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">5FN — Quinta Forma Normal</div>
+      <div class="section-desc">Relaciones cíclicas de 3 vías: evitar tuplas espurias al unir solo dos tablas</div>
+    </div>
+    <span class="fn-category cat-normalizacion">Normalización</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>La pregunta que responde:</strong> ¿esta tabla representa en realidad una relación cíclica de 3 entidades, donde separarla en solo 2 tablas inventaría combinaciones falsas al unirlas?<br><br>
+      Este caso NO aparece en Registro_Academico_Total — el enunciado de tu práctica no tiene una relación cíclica de 3 vías, por eso ese caso llega completo hasta 4FN. 5FN es un escenario aparte, mucho más raro, y casi siempre se enseña con su propio ejemplo. Usemos el clásico: <strong>Profesor – Curso – Sede</strong>.<br><br>
+      La regla de negocio cíclica es: si el Profesor enseña el Curso, Y el Curso se imparte en la Sede, Y el Profesor trabaja en esa Sede, ENTONCES el Profesor imparte ese Curso específicamente en esa Sede. Las tres relaciones están encadenadas — no son 3 hechos independientes, son 1 solo hecho de 3 dimensiones.
+    </div>
+
+    <div class="norm-table-label">Tabla problemática — intento de guardarlo en una sola relación de 3 columnas</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-pkc">Profesor</th><th class="col-pkc">Curso</th><th class="col-pkc">Sede</th></tr>
+        <tr><td class="col-pkc">Sr. Pérez</td><td class="col-pkc">Bases de Datos</td><td class="col-pkc">Sede del Caribe</td></tr>
+        <tr><td class="col-pkc">Sr. Pérez</td><td class="col-pkc">Redes</td><td class="col-pkc">Sede Rodrigo Facio</td></tr>
+        <tr><td class="col-pkc">Sra. García</td><td class="col-pkc">Bases de Datos</td><td class="col-pkc">Sede del Caribe</td></tr>
+      </table>
+    </div>
+    <div class="norm-problem">Si descomponemos esto en solo 2 tablas — por ejemplo Profesor-Curso y Curso-Sede — y luego las unimos con un JOIN para reconstruir la información, la base de datos va a inventar una fila falsa: "Sra. García imparte Redes en Sede del Caribe" (porque García está en Bases de Datos-Sede del Caribe, y Redes también aparece ligado a Sede del Caribe vía Pérez). Esa combinación nunca ocurrió en la realidad — es una <strong>tupla espuria</strong>.</div>
+
+    <div class="norm-table-label">Tabla 1: Profesor_Curso</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-pkc">Profesor</th><th class="col-pkc">Curso</th></tr>
+        <tr><td class="col-pkc">Sr. Pérez</td><td class="col-pkc">Bases de Datos</td></tr>
+        <tr><td class="col-pkc">Sr. Pérez</td><td class="col-pkc">Redes</td></tr>
+        <tr><td class="col-pkc">Sra. García</td><td class="col-pkc">Bases de Datos</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-table-label">Tabla 2: Curso_Sede</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-pkc">Curso</th><th class="col-pkc">Sede</th></tr>
+        <tr><td class="col-pkc">Bases de Datos</td><td class="col-pkc">Sede del Caribe</td></tr>
+        <tr><td class="col-pkc">Redes</td><td class="col-pkc">Sede Rodrigo Facio</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-table-label">Tabla 3: Profesor_Sede</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-pkc">Profesor</th><th class="col-pkc">Sede</th></tr>
+        <tr><td class="col-pkc">Sr. Pérez</td><td class="col-pkc">Sede del Caribe</td></tr>
+        <tr><td class="col-pkc">Sr. Pérez</td><td class="col-pkc">Sede Rodrigo Facio</td></tr>
+        <tr><td class="col-pkc">Sra. García</td><td class="col-pkc">Sede del Caribe</td></tr>
+      </table>
+    </div>
+    <div class="norm-fix">Solo uniendo las TRES tablas a la vez (no dos) se reconstruye exactamente la tabla original, sin inventar filas. Esa es la prueba de que se necesitaban 3 proyecciones, no 2 — y es justo la definición de 5FN.</div>
+    <div class="tip">5FN casi nunca se aplica en la práctica profesional fuera de la teoría — la mayoría de los diseños reales se quedan en 3FN o BCNF. Pero si te lo preguntan en el examen, la frase clave para identificarlo es "relación cíclica de tres entidades" o "no se puede descomponer en dos tablas sin pérdida, pero sí en tres". Si tu caso de estudio no tiene ese patrón cíclico de 3 vías, simplemente no aplica — como pasó con Registro_Academico_Total.</div>
+  </div>
+</div>
+
+<!-- ==================== RESULTADO FINAL ==================== -->
+<div class="section" data-cat="normalizacion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">Resultado final normalizado</div>
+      <div class="section-desc">Las 6 tablas resultantes de Registro_Academico_Total, con sus PK y FK</div>
+    </div>
+    <span class="fn-category cat-normalizacion">Normalización</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      Esto es lo que entregaría como "Paso 2" completo en la práctica: las tablas finales después de aplicar 1FN → 2FN → 3FN → BCNF → 4FN, todas relacionadas por claves foráneas hacia <strong>Estudiantes</strong>.
+    </div>
+
+    <div class="norm-table-label">1. Estudiantes</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-pk">EstudianteID</th><th>Nombre</th><th>CorreoInstitucional</th></tr>
+        <tr><td class="col-pk">1</td><td>Juan</td><td>juan@ucr.ac.cr</td></tr>
+        <tr><td class="col-pk">2</td><td>María</td><td>maria@ucr.ac.cr</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-table-label">2. Calificaciones</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-fk col-pkc">EstudianteID</th><th class="col-pkc">Curso</th><th>Calificación</th></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">Matemáticas</td><td>85</td></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">Historia</td><td>90</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Matemáticas</td><td>92</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Literatura</td><td>87</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-table-label">3. Áreas_Profesor</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-pk">ProfesorTutor</th><th>ÁreaEstudio</th></tr>
+        <tr><td class="col-pk">Sr. Pérez</td><td>Telemática</td></tr>
+        <tr><td class="col-pk">Sra. García</td><td>Inteligencia Artificial</td></tr>
+        <tr><td class="col-pk">Sr. López</td><td>Ciencia de Datos</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-table-label">4. Tutorías</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-fk col-pkc">EstudianteID</th><th class="col-fk col-pkc">ProfesorTutor</th></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-fk col-pkc">Sr. Pérez</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-fk col-pkc">Sra. García</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-fk col-pkc">Sr. López</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-table-label">5. Estudiantes_Hobbies</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-fk col-pkc">EstudianteID</th><th class="col-pkc">Hobby</th></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">Fútbol</td></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">Pintura</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Danza</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Lectura</td></tr>
+      </table>
+    </div>
+
+    <div class="norm-table-label">6. Estudiantes_Certificaciones</div>
+    <div class="norm-table-wrap">
+      <table class="norm-table">
+        <tr><th class="col-fk col-pkc">EstudianteID</th><th class="col-pkc">CertificacionTecnica</th></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">CCNA</td></tr>
+        <tr><td class="col-fk col-pkc">1</td><td class="col-pkc">AWS Cloud</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Azure AI</td></tr>
+        <tr><td class="col-fk col-pkc">2</td><td class="col-pkc">Scrum Master</td></tr>
+      </table>
+    </div>
+    <div class="norm-legend">
+      <span><span class="dot dot-pk"></span> PK simple</span>
+      <span><span class="dot dot-pkc"></span> PK compuesta (2 columnas juntas)</span>
+      <span><span class="dot dot-fk"></span> FK hacia Estudiantes</span>
+    </div>
+    <div class="tip">Para el diagrama de dependencias (Paso 1 de la práctica): dibujá EstudianteID como el nodo central, con flechas hacia Nombre y Correo (dependencia simple); {EstudianteID, Curso} → Calificación (dependencia completa, no parcial); ProfesorTutor → ÁreaEstudio (el determinante que rompe BCNF); y EstudianteID →→ Hobby, EstudianteID →→ CertificacionTecnica como dos flechas dobles independientes (dependencias multivaluadas, 4FN).</div>
+  </div>
+</div>
+
+<!-- ==================== NORMALIZACIÓN: RESUMEN ==================== -->
+<div class="section" data-cat="normalizacion">
+  <div class="section-header" onclick="toggle(this)">
+    <div>
+      <div class="fn-name">Resumen rápido para el examen</div>
+      <div class="section-desc">Las 6 preguntas que tenés que poder responder de memoria</div>
+    </div>
+    <span class="fn-category cat-normalizacion">Normalización</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="section-body">
+    <div class="definition">
+      <strong>1FN</strong> — ¿cada celda tiene un solo valor atómico?<br>
+      <strong>2FN</strong> — (solo si hay PK compuesta) ¿alguna columna depende de SOLO una parte de la llave?<br>
+      <strong>3FN</strong> — ¿alguna columna depende de OTRA columna no-clave, en vez de depender directo de la PK?<br>
+      <strong>BCNF</strong> — ¿todo determinante de la tabla es clave candidata? (3FN reforzada para llaves que se superponen)<br>
+      <strong>4FN</strong> — ¿hay dos atributos multivaluados independientes mezclados en la misma tabla?<br>
+      <strong>5FN</strong> — ¿la tabla solo se reconstruye sin pérdida con 3+ tablas, nunca con 2? (caso raro, casi solo teoría — ej. Profesor-Curso-Sede, donde unir solo dos de las tres tablas inventa combinaciones falsas)
+    </div>
+    <div class="tip">Truco de oro para la defensa oral: por cada forma normal que digas que aplicaste, señalá QUÉ columna específica causaba el problema y POR QUÉ — usando el nombre real de la columna, no la teoría en abstracto. "Aplicamos BCNF" no dice nada. "Separamos ProfesorTutor en su propia tabla porque determinaba ÁreaEstudio sin ser clave candidata de Áreas" sí demuestra que entendiste el caso concreto.</div>
+  </div>
+</div>
+
 
 <script>
 function toggle(header) {
